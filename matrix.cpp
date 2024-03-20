@@ -3,8 +3,6 @@
 #include <cstdlib>
 #include <ctime>
 
-
-
 Matrix::Matrix::Matrix() : storage({{0, 0}, {0, 0}}) {}
 
 Matrix::Matrix::Matrix(int rows, int columns)
@@ -90,15 +88,19 @@ Matrix::Matrix operator-(const Matrix::Matrix &left, const Matrix::Matrix &right
 
 Matrix::Matrix operator*(const Matrix::Matrix &left, const Matrix::Matrix &right)
 {
-    if (left.storage[0].size() != right.storage.size()){
-        throw; //TODO
+    if (left.storage[0].size() != right.storage.size())
+    {
+        throw Matrix::Exception();
     }
     Matrix::Matrix result;
     result.storage = std::vector(left.storage.size(), std::vector<int>(right.storage[0].size()));
 
-    for (int row = 0; row < result.storage.size(); ++row) {
-        for (int col = 0; col < result.storage[0].size(); ++col) {
-            for (int inner = 0; inner < left.storage[0].size(); ++inner) {
+    for (int row = 0; row < result.storage.size(); ++row)
+    {
+        for (int col = 0; col < result.storage[0].size(); ++col)
+        {
+            for (int inner = 0; inner < left.storage[0].size(); ++inner)
+            {
                 result.storage[row][col] += left.storage[row][inner] * right.storage[inner][col];
             }
         }
@@ -143,5 +145,40 @@ namespace Matrix
     {
         this->storage = other.storage;
         return *this;
+    }
+
+    Convolution::Convolution(const Matrix &left, const Matrix &right) : Matrix(left.storage.size() - right.storage.size() + 1, left.storage[0].size() - right.storage[0].size() + 1)
+    {
+        for (int i = 0; i < storage.size(); ++i)
+        {
+            for (int j = 0; j < storage[0].size(); ++j)
+            {
+                storage[i][j] = 0;
+                for (int n = 0; n < right.storage.size(); ++n)
+                {
+                    for (int m = 0; m < right.storage[0].size(); ++m)
+                    {
+                        storage[i][j] += right.storage[n][m] * left.storage[i + n][j + m];
+                    }
+                }
+            }
+        }
+    }
+    MaxPooling::MaxPooling(const Matrix &matrix, int kernel_size) : Matrix(matrix.storage.size() / kernel_size, matrix.storage[0].size() / kernel_size)
+    {
+        for (int i = 0; i < storage.size(); ++i)
+        {
+            for (int j = 0; j < storage[0].size(); ++j)
+            {
+                storage[i][j] = 0;
+                for (int n = 0; n < kernel_size; ++n)
+                {
+                    for (int m = 0; m < kernel_size; ++m)
+                    {
+                        storage[i][j] = std::max(storage[i][j], matrix.storage[n + i * kernel_size][m + j * kernel_size]);
+                    }
+                }
+            }
+        }
     }
 }
